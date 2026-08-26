@@ -16,16 +16,20 @@
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
-html, body, #root { height: 100%; }
+html,
+body,
+#root {
+  height: 100%;
+}
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background:
-    radial-gradient(1200px 500px at 50% -10%, #1b2230 0%, transparent 60%),
-    var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: radial-gradient(1200px 500px at 50% -10%, #1b2230 0%, transparent 60%), var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   line-height: 1.5;
@@ -39,9 +43,12 @@ button {
   color: inherit;
 }
 
-input, select {
+input,
+select {
   font: inherit;
   color: inherit;
 }
 
-a { color: var(--accent); }
+a {
+  color: var(--accent);
+}

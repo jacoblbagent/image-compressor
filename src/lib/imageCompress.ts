@@ -17,7 +17,7 @@
  * All heavy lifting happens on-device; no bytes ever leave the browser.
  * ------------------------------------------------------------------ */
 
-export type OutputFormat = "jpeg" | "webp" | "png";
+export type OutputFormat = 'jpeg' | 'webp' | 'png';
 
 export interface CompressOptions {
   format: OutputFormat;
@@ -41,18 +41,18 @@ export function loadImage(file: File | Blob): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
-    img.decoding = "async";
+    img.decoding = 'async';
     img.onload = () => {
       URL.revokeObjectURL(url);
       if (!img.naturalWidth || !img.naturalHeight) {
-        reject(new Error("Decoded image has no dimensions — unsupported format."));
+        reject(new Error('Decoded image has no dimensions — unsupported format.'));
         return;
       }
       resolve(img);
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error("Could not decode this image. Is it a valid image file?"));
+      reject(new Error('Could not decode this image. Is it a valid image file?'));
     };
     img.src = url;
   });
@@ -64,7 +64,10 @@ export function fitWithin(imgW: number, imgH: number, maxLength: number) {
     return { width: imgW, height: imgH };
   }
   const ratio = Math.min(maxLength / imgW, maxLength / imgH);
-  return { width: Math.max(1, Math.round(imgW * ratio)), height: Math.max(1, Math.round(imgH * ratio)) };
+  return {
+    width: Math.max(1, Math.round(imgW * ratio)),
+    height: Math.max(1, Math.round(imgH * ratio)),
+  };
 }
 
 /** 142 B / 4.2 KB / 1.3 MB */
@@ -83,47 +86,60 @@ export function humanSize(bytes: number): string {
  * 3. Maps every pixel to its nearest center, rebuilding a limited-palette
  *    image that PNG can encode far more efficiently.
  */
-function quantize(
-  data: Uint8ClampedArray,
-  levels: number
-): Uint8ClampedArray {
+function quantize(data: Uint8ClampedArray, levels: number): Uint8ClampedArray {
   const out = new Uint8ClampedArray(data.length);
   const outFilled = out.length > 0;
 
   // ---- 1. Histogram over 5-bit channels -----------------------------
   const keyOf = (r: number, g: number, b: number, a: number) =>
-    ((r << 15) | (g << 10) | (b << 5) | a); // 5 bits each
+    (r << 15) | (g << 10) | (b << 5) | a; // 5 bits each
 
   // Accumulators: sum of each channel + count. We use arrays keyed by the
   // reduced bucket so unrelated buckets never pollute each other.
   const hist = new Map<number, { r: number; g: number; b: number; a: number; n: number }>();
 
   for (let i = 0; i < data.length; i += 4) {
-    const r = data[i] >> 3, g = data[i + 1] >> 3, b = data[i + 2] >> 3, a = data[i + 3] >> 3;
+    const r = data[i] >> 3,
+      g = data[i + 1] >> 3,
+      b = data[i + 2] >> 3,
+      a = data[i + 3] >> 3;
     const k = keyOf(r, g, b, a);
     const e = hist.get(k);
-    if (e) { e.r += r; e.g += g; e.b += b; e.a += a; e.n++; }
-    else hist.set(k, { r, g, b, a, n: 1 });
+    if (e) {
+      e.r += r;
+      e.g += g;
+      e.b += b;
+      e.a += a;
+      e.n++;
+    } else hist.set(k, { r, g, b, a, n: 1 });
   }
 
   // ---- 2. Choose palette centers (most frequent buckets) ------------
   const buckets = [...hist.values()].sort((x, y) => y.n - x.n);
   const count = Math.min(levels, buckets.length, 1 << 20);
-  const centers = buckets
-    .slice(0, count)
-    .map((bk) => ({
-      r: bk.r / bk.n, g: bk.g / bk.n, b: bk.b / bk.n, a: bk.a / bk.n,
-    }));
+  const centers = buckets.slice(0, count).map((bk) => ({
+    r: bk.r / bk.n,
+    g: bk.g / bk.n,
+    b: bk.b / bk.n,
+    a: bk.a / bk.n,
+  }));
 
   // ---- 3. Map every original bucket to its nearest center --------
   const lookup = new Map<number, number>();
   for (const [k, bk] of hist) {
-    let best = 0, bestD = Infinity;
-    const cr = bk.r / bk.n, cg = bk.g / bk.n, cb = bk.b / bk.n, ca = bk.a / bk.n;
+    let best = 0,
+      bestD = Infinity;
+    const cr = bk.r / bk.n,
+      cg = bk.g / bk.n,
+      cb = bk.b / bk.n,
+      ca = bk.a / bk.n;
     for (let ci = 0; ci < centers.length; ci++) {
       const c = centers[ci];
       const d = (cr - c.r) ** 2 + (cg - c.g) ** 2 + (cb - c.b) ** 2 + (ca - c.a) ** 2;
-      if (d < bestD) { bestD = d; best = ci; }
+      if (d < bestD) {
+        bestD = d;
+        best = ci;
+      }
     }
     lookup.set(k, best);
   }
@@ -131,7 +147,10 @@ function quantize(
   // ---- 4. rebuild pixels from palette ----------------------------
   if (!outFilled) return data; // safety (unreachable)
   for (let i = 0; i < data.length; i += 4) {
-    const r = data[i] >> 3, g = data[i + 1] >> 3, b = data[i + 2] >> 3, a = data[i + 3] >> 3;
+    const r = data[i] >> 3,
+      g = data[i + 1] >> 3,
+      b = data[i + 2] >> 3,
+      a = data[i + 3] >> 3;
     const ci = lookup.get(keyOf(r, g, b, a))!;
     const c = centers[ci];
     out[i] = Math.round(c.r * 8);
@@ -156,43 +175,44 @@ function canvasToBlob(canvas: HTMLCanvasElement, mime: string, quality?: number)
  * Compress an image File into the requested format/size.
  * Returns the output blob plus metadata. Caller owns any object URL created.
  */
-export async function compressImage(
-  file: File,
-  opts: CompressOptions
-): Promise<CompressResult> {
+export async function compressImage(file: File, opts: CompressOptions): Promise<CompressResult> {
   const img = await loadImage(file);
   const { width, height } = fitWithin(img.naturalWidth, img.naturalHeight, opts.maxWidth);
 
-  const canvas = document.createElement("canvas");
+  const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas 2D context unavailable.");
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas 2D context unavailable.');
 
   ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
+  ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(img, 0, 0, width, height);
 
   let blob: Blob;
 
-  if (opts.format === "jpeg") {
-    blob = await canvasToBlob(canvas, "image/jpeg", opts.quality);
-  } else if (opts.format === "webp") {
-    blob = await canvasToBlob(canvas, "image/webp", opts.quality);
+  if (opts.format === 'jpeg') {
+    blob = await canvasToBlob(canvas, 'image/jpeg', opts.quality);
+  } else if (opts.format === 'webp') {
+    blob = await canvasToBlob(canvas, 'image/webp', opts.quality);
   } else {
     // PNG
     if (opts.lossyPng) {
       const imageData = ctx.getImageData(0, 0, width, height);
-      const reduced = quantize(imageData.data, Math.min(512, Math.max(16, Math.round(opts.quality * 256) * 2)));
-      const tmp = document.createElement("canvas");
-      tmp.width = width; tmp.height = height;
-      const tctx = tmp.getContext("2d")!;
+      const reduced = quantize(
+        imageData.data,
+        Math.min(512, Math.max(16, Math.round(opts.quality * 256) * 2))
+      );
+      const tmp = document.createElement('canvas');
+      tmp.width = width;
+      tmp.height = height;
+      const tctx = tmp.getContext('2d')!;
       const d2 = tctx.createImageData(width, height);
       d2.data.set(reduced);
       tctx.putImageData(d2, 0, 0);
-      blob = await canvasToBlob(tmp, "image/png");
+      blob = await canvasToBlob(tmp, 'image/png');
     } else {
-      blob = await canvasToBlob(canvas, "image/png");
+      blob = await canvasToBlob(canvas, 'image/png');
     }
   }
 

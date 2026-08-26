@@ -43,7 +43,8 @@ export function Compressor() {
 
     const added: FileEntry[] = await Promise.all(
       list.map(async (file) => {
-        let imgW = 0, imgH = 0;
+        let imgW = 0,
+          imgH = 0;
         try {
           const img = await loadImage(file);
           imgW = img.naturalWidth;
@@ -132,15 +133,23 @@ export function Compressor() {
   return (
     <div className="compressor page">
       <header className="page-header">
-        <h1>Pixel<span className="accent">Slim</span></h1>
-        <p className="subtitle">In-browser image compression — no uploads, everything stays on your device.</p>
+        <h1>
+          Pixel<span className="accent">Slim</span>
+        </h1>
+        <p className="subtitle">
+          In-browser image compression — no uploads, everything stays on your device.
+        </p>
       </header>
 
       {/* Controls */}
       <section className="controls card">
         <div className="ctrl">
           <label htmlFor="fmt">Format</label>
-          <select id="fmt" value={format} onChange={(e) => setFormat(e.target.value as OutputFormat)}>
+          <select
+            id="fmt"
+            value={format}
+            onChange={(e) => setFormat(e.target.value as OutputFormat)}
+          >
             <option value="jpeg">JPEG</option>
             <option value="webp">WebP</option>
             <option value="png">PNG</option>
@@ -153,7 +162,10 @@ export function Compressor() {
             <input
               id="qlty"
               type="range"
-              min={0.05} max={1} step={0.05} value={quality}
+              min={0.05}
+              max={1}
+              step={0.05}
+              value={quality}
               onChange={(e) => setQuality(parseFloat(e.target.value))}
             />
           </div>
@@ -162,25 +174,44 @@ export function Compressor() {
         {format === 'png' && (
           <div className="ctrl ctrl-toggle">
             <label>
-              <input type="checkbox" checked={lossyPng} onChange={(e) => setLossyPng(e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={lossyPng}
+                onChange={(e) => setLossyPng(e.target.checked)}
+              />
               <span>Lossy palette (8-bit, shrinks photos)</span>
             </label>
           </div>
         )}
 
         <div className="ctrl">
-          <label htmlFor="max">Max wide edge · {maxWidth === 0 ? 'Original' : `${maxWidth}px`}</label>
+          <label htmlFor="max">
+            Max wide edge · {maxWidth === 0 ? 'Original' : `${maxWidth}px`}
+          </label>
           <input
             id="maxw"
             type="range"
-            min={256} max={4096} step={64} value={maxWidth}
+            min={256}
+            max={4096}
+            step={64}
+            value={maxWidth}
             onChange={(e) => setMaxWidth(parseInt(e.target.value))}
           />
-          <button className="link" onClick={() => setMaxWidth(0)}>Keep original</button>
+          <button className="link" onClick={() => setMaxWidth(0)}>
+            Keep original
+          </button>
         </div>
 
-        <button className="btn primary" onClick={compressAll} disabled={busy || entries.length === 0}>
-          {busy ? 'Compressing…' : entries.length ? `Compress ${entries.length} image${entries.length > 1 ? 's' : ''}` : 'Add images'}
+        <button
+          className="btn primary"
+          onClick={compressAll}
+          disabled={busy || entries.length === 0}
+        >
+          {busy
+            ? 'Compressing…'
+            : entries.length
+              ? `Compress ${entries.length} image${entries.length > 1 ? 's' : ''}`
+              : 'Add images'}
         </button>
       </section>
 
@@ -188,12 +219,21 @@ export function Compressor() {
       <section
         className={`dropzone card ${dragOver ? 'over' : ''}`}
         onClick={() => inputRef.current?.click()}
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
         onDragLeave={() => setDragOver(false)}
-        onDrop={(e) => { e.preventDefault(); setDragOver(false); addFiles(e.dataTransfer.files); }}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragOver(false);
+          addFiles(e.dataTransfer.files);
+        }}
       >
         <input ref={inputRef} type="file" accept="image/*" multiple hidden onChange={onFiles} />
-        <p className="drop-title">Drop images here or <span className="accent link">browse</span></p>
+        <p className="drop-title">
+          Drop images here or <span className="accent link">browse</span>
+        </p>
         <p className="hint">PNG, JPEG, WebP, GIF, AVIF · processed entirely in your browser</p>
       </section>
 
@@ -201,19 +241,25 @@ export function Compressor() {
       {entries.length > 0 && (
         <section className="results">
           <div className="results-head">
-            <span>{entries.length} image{entries.length > 1 ? 's' : ''}</span>
+            <span>
+              {entries.length} image{entries.length > 1 ? 's' : ''}
+            </span>
             <div className="head-actions">
-              {hasOutput && <button className="btn ghost" onClick={downloadAll}>⤓ Download all</button>}
-              <button className="btn ghost" onClick={clearAll}>Clear</button>
+              {hasOutput && (
+                <button className="btn ghost" onClick={downloadAll}>
+                  ⤓ Download all
+                </button>
+              )}
+              <button className="btn ghost" onClick={clearAll}>
+                Clear
+              </button>
             </div>
           </div>
 
           <div className="grid">
             {entries.map((e) => {
               const { width, height } = fitWithin(e.imgW, e.imgH, maxWidth);
-              const pct = e.output
-                ? Math.round((1 - e.output.size / e.file.size) * 100)
-                : 0;
+              const pct = e.output ? Math.round((1 - e.output.size / e.file.size) * 100) : 0;
               const good = e.output !== null && e.output.size < e.file.size;
               return (
                 <article className="tile card" key={e.id}>
@@ -222,7 +268,9 @@ export function Compressor() {
                       <img src={e.originalUrl} alt="original" />
                       <figcaption>
                         <b>Original</b>
-                        <span>{e.imgW}×{e.imgH} · {humanSize(e.file.size)}</span>
+                        <span>
+                          {e.imgW}×{e.imgH} · {humanSize(e.file.size)}
+                        </span>
                       </figcaption>
                     </figure>
                     <span className="arrow">→</span>
@@ -235,9 +283,13 @@ export function Compressor() {
                       <figcaption>
                         <b>Compressed</b>
                         {e.output ? (
-                          <span>{e.output.width}×{e.output.height} · {humanSize(e.output.size)}</span>
+                          <span>
+                            {e.output.width}×{e.output.height} · {humanSize(e.output.size)}
+                          </span>
                         ) : (
-                          <span className="dim">Planned: {width}×{height}</span>
+                          <span className="dim">
+                            Planned: {width}×{height}
+                          </span>
                         )}
                       </figcaption>
                     </figure>
@@ -249,11 +301,19 @@ export function Compressor() {
                         {good ? `−${pct}% Saving` : `${pct >= 0 ? '+' : ''}${pct}% Larger`}
                       </span>
                     )}
-                    <span className="name" title={e.file.name}>{e.file.name}</span>
+                    <span className="name" title={e.file.name}>
+                      {e.file.name}
+                    </span>
                     <button className="btn small" onClick={() => download(e)} disabled={!e.output}>
                       ⤓
                     </button>
-                    <button className="btn small muted" onClick={() => removeEntry(e.id)} aria-label="remove">✕</button>
+                    <button
+                      className="btn small muted"
+                      onClick={() => removeEntry(e.id)}
+                      aria-label="remove"
+                    >
+                      ✕
+                    </button>
                   </div>
                 </article>
               );
